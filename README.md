@@ -2,6 +2,8 @@
 
 在浏览器里操控 Microduck。原始 MJCF / STL 机器人、MuJoCo 物理和 ONNX 运控策略都在本机运行，可部署为纯静态站点。
 
+[在线体验](https://tonyruan.github.io/microduck-web/) · [GitHub 仓库](https://github.com/TonyRuan/microduck-web)
+
 ![桌面键盘界面](docs/images/desktop.png)
 
 ## 开始使用
@@ -21,6 +23,10 @@ npm run preview
 ```
 
 `dist/` 是完整静态发布目录；不需要 Node 服务、Python 服务、登录或远程推理。生产环境使用 HTTPS；`localhost` 可用于本地测试。支持部署在域名下的子目录，例如 `/microduck/`。构建包含离线缓存，首次成功加载并完成后台缓存后可断网重新打开；浏览器清理站点数据会移除缓存与导入的模型。
+
+## GitHub Pages 发布
+
+仓库使用 `.github/workflows/pages.yml` 自动测试、构建并发布 `dist/`。默认分支 `codex/static-web` 的每次推送会触发部署，也可在 Actions 中手动运行 Deploy Microduck Web。Pages 的构建来源设置为 GitHub Actions；正式地址为 https://tonyruan.github.io/microduck-web/ 。
 
 ## 操控
 
