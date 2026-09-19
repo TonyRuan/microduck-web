@@ -1,0 +1,31 @@
+{
+  "name": "microduck-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc --noEmit && vite build && node scripts/build-offline.mjs",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "tsx --test tests/*.test.ts",
+    "predev": "node scripts/copy-runtime.mjs",
+    "prebuild": "node scripts/copy-runtime.mjs",
+    "postinstall": "node scripts/copy-runtime.mjs",
+    "test:browser": "node scripts/qa-browser.mjs",
+    "format": "prettier --write src tests scripts index.html vite.config.ts",
+    "test:static": "node scripts/qa-static.mjs"
+  },
+  "dependencies": {
+    "@mujoco/mujoco": "3.13.0",
+    "onnxruntime-web": "1.30.0",
+    "three": "0.186.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.58.2",
+    "@types/three": "0.183.1",
+    "prettier": "3.6.2",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
+    "vite": "7.3.1"
+  }
+}

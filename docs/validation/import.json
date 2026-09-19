@@ -1,0 +1,48 @@
+{
+  "invalid": "true",
+  "hub": "已导入「microduck-polite-bow-b1d864」。可在下方试运行，或应用为步态。",
+  "during": {
+    "position": [
+      0.00857891578549098,
+      0.0013531645514988171,
+      0.11520816327773808
+    ],
+    "label": "microduck-polite-bow-b1d864",
+    "busy": true
+  },
+  "after": {
+    "position": [
+      0.0029342352941087143,
+      -0.0011800832041410389,
+      0.11739366845684221
+    ],
+    "fallen": false,
+    "busy": false
+  },
+  "saved": [
+    {
+      "id": "import-f2f777919cee080d2d172c635d4b6ead14c0e01a7065ac64bd21cc5fad14158c",
+      "name": "microduck-polite-bow-b1d864",
+      "description": "仓库未提供 manifest.json，使用手动填写的动作信息。",
+      "source": "fffiloni/microduck-polite-bow-b1d864@9a9d21a85cf7b5cbd1854c03ad58bd949502a5ea",
+      "kind": "episodic",
+      "encoding": "constant",
+      "duration": 4,
+      "unwind": 0,
+      "period": 4,
+      "endPhase": 0.7,
+      "command": [
+        0,
+        0,
+        0
+      ],
+      "idle": [
+        0,
+        0,
+        0
+      ],
+      "hash": "f2f777919cee080d2d172c635d4b6ead14c0e01a7065ac64bd21cc5fad14158c"
+    }
+  ],
+  "local": "已导入「bow」。可在下方试运行，或应用为步态。"
+}

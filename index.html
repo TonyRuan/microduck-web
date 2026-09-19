@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#dfeae3" />
+    <meta
+      name="description"
+      content="在浏览器里操控 Microduck。真实物理仿真，离线运控，导入社区新动作。"
+    />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <title>Microduck · 浏览器里的机器人</title>
+  </head>
+  <body>
+    <canvas
+      id="scene"
+      aria-label="3D 鸭子场景，拖动旋转，双指或右键平移，滚轮或捏合缩放"
+    ></canvas>
+    <header>
+      <div class="brand">
+        <h1>microduck<span> / web</span></h1>
+        <p>浏览器里的机器人</p>
+      </div>
+      <div id="status" role="status"><i></i><span>准备启动</span></div>
+      <nav aria-label="场景工具">
+        <button
+          id="home"
+          class="icon"
+          aria-label="恢复默认视角"
+          title="恢复视角 · 0"
+        >
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="7" />
+            <circle cx="12" cy="12" r="3" />
+            <path d="M12 1v3m0 16v3M1 12h3m16 0h3" />
+          </svg></button
+        ><button id="stop">停止</button
+        ><button
+          id="menu-toggle"
+          class="icon"
+          aria-label="打开菜单"
+          aria-expanded="false"
+        >
+          <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+        </button>
+      </nav>
+    </header>
+    <div id="loading" class="loading">
+      <span class="loading-mark">m</span>
+      <h2>让小鸭子站起来</h2>
+      <p id="loading-text">载入本地物理世界…</p>
+      <progress id="load-progress" max="1" value="0"></progress
+      ><small>首次打开需要下载模型，之后可使用缓存</small
+      ><button id="retry" hidden>重新加载</button>
+    </div>
+    <div id="toast" role="status" hidden></div>
+    <div id="touch-controls">
+      <div class="joystick-wrap">
+        <div
+          id="joystick"
+          role="application"
+          aria-label="行走摇杆：上前进，下后退，左右转向"
+        >
+          <div class="joystick-ring"></div>
+          <div class="joystick-cross"></div>
+          <div class="joystick-knob"></div>
+        </div>
+        <span>行走 / 转向</span>
+      </div>
+      <div class="action-grid">
+        <button data-action="sitstand" id="sit">坐下</button
+        ><button data-action="roll">翻滚</button
+        ><button data-action="kick-left">左踢</button
+        ><button data-action="kick-right">右踢</button
+        ><button data-action="pick">捡拾</button
+        ><button data-action="ball">放球</button>
+      </div>
+    </div>
+    <div id="keyboard-help" aria-label="键盘控制提示">
+      <span><kbd>W A S D</kbd> 行走 / 转向</span><span><kbd>C</kbd> 坐起</span
+      ><span><kbd>R</kbd> 翻滚</span><span><kbd>Q E</kbd> 踢球</span
+      ><span><kbd>F</kbd> 捡拾</span><span><kbd>空格</kbd> 停止</span>
+    </div>
+    <footer>
+      <span id="telemetry">本地物理仿真</span
+      ><span id="gesture-hint">拖动旋转 · 右键平移 · 滚轮缩放</span>
+    </footer>
+    <aside id="menu" hidden aria-label="控制与动作菜单">
+      <div class="panel-heading">
+        <div>
+          <h2>你的鸭子，你来控制</h2>
+          <p>调整手感，或教它一个新动作。</p>
+        </div>
+        <button id="menu-close" class="icon" aria-label="关闭菜单">
+          <svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18" /></svg>
+        </button>
+      </div>
+      <div class="tabs" role="tablist">
+        <button
+          id="tab-controls"
+          role="tab"
+          aria-selected="true"
+          aria-controls="control-panel"
+        >
+          操控设置</button
+        ><button
+          id="tab-library"
+          role="tab"
+          aria-selected="false"
+          aria-controls="library-panel"
+        >
+          动作库 <span id="policy-count">0</span>
+        </button>
+      </div>
+      <section
+        id="control-panel"
+        role="tabpanel"
+        aria-labelledby="tab-controls"
+      >
+        <label class="field"
+          >控制界面<select id="control-mode">
+            <option value="auto">自动识别设备</option>
+            <option value="touch">触屏摇杆</option>
+            <option value="keyboard">键盘控制</option></select
+          ><small id="mode-help"></small
+        ></label>
+        <label class="slider-label" for="forward"
+          >前进速度 <output id="forward-value">0.40 m/s</output></label
+        ><input
+          id="forward"
+          type="range"
+          min="0"
+          max="0.4"
+          step="0.01"
+          value="0.4"
+        />
+        <label class="slider-label" for="backward"
+          >后退速度 <output id="backward-value">0.40 m/s</output></label
+        ><input
+          id="backward"
+          type="range"
+          min="0"
+          max="0.4"
+          step="0.01"
+          value="0.4"
+        />
+        <label class="slider-label" for="turn"
+          >转向速度 <output id="turn-value">1.00 rad/s</output></label
+        ><input id="turn" type="range" min="0" max="1" step="0.05" value="1" />
+        <p class="muted note">
+          这里设置的是指令速度。低速时，鸭子可能原地踏步。
+        </p>
+        <label class="field"
+          >行走步态<select id="profile">
+            <option value="velstand">默认步态 · velstand</option>
+            <option value="alpha">独立站立 + Alpha 行走</option>
+          </select></label
+        >
+        <label class="switch-row"
+          >视角跟随鸭子<input id="follow" type="checkbox" checked /></label
+        ><button id="pause" class="wide">暂停仿真 <kbd>P</kbd></button
+        ><button id="reset" class="wide">重置鸭子与场景</button>
+        <div class="policy-actions">
+          <button id="ball-left">放球到左脚前</button
+          ><button id="ball-right">放球到右脚前</button>
+        </div>
+        <button id="defaults" class="text-button">恢复默认设置与策略</button>
+        <details>
+          <summary>全部快捷键</summary>
+          <p class="muted">
+            W / ↑ 前进 · S / ↓ 后退<br />A / ← 左转 · D / → 右转<br />C 坐起 · R
+            翻滚 · Q / E 左右踢<br />F 捡拾 · B 放球到右脚前 · P 暂停 / 继续<br />空格
+            停止行走 · 0 恢复视角<br />Esc 关闭菜单
+          </p>
+        </details>
+        <p class="fine">
+          停止只清空行走指令；正在执行的动作会完成。需要立即冻结世界时，使用暂停仿真。
+        </p>
+      </section>
+      <section
+        id="library-panel"
+        role="tabpanel"
+        aria-labelledby="tab-library"
+        hidden
+      >
+        <div class="library-intro">
+          <h3>给它一个新本领</h3>
+          <p>导入兼容的 Microduck 策略，在浏览器里试一试。</p>
+        </div>
+        <form id="import-form">
+          <label class="field"
+            >Hugging Face 公开模型仓库<input
+              id="hub-repo"
+              type="text"
+              placeholder="作者 / microduck-bow"
+              autocomplete="off"
+          /></label>
+          <div class="or"><span>或者选择本地文件</span></div>
+          <label class="file-label"
+            >ONNX 模型<input
+              id="model-file"
+              type="file"
+              accept=".onnx" /></label
+          ><label class="file-label"
+            >动作清单 <small>manifest.json</small
+            ><input
+              id="manifest-file"
+              type="file"
+              accept=".json,application/json"
+          /></label>
+          <details id="import-options">
+            <summary>没有清单？补充动作信息</summary>
+            <label class="field"
+              >动作名称<input
+                id="import-name"
+                placeholder="例如：鞠躬"
+                maxlength="80" /></label
+            ><label class="field"
+              >用途<select id="import-kind">
+                <option value="episodic">一次性动作</option>
+                <option value="walk">行走步态</option>
+                <option value="stand">站立策略</option>
+              </select></label
+            >
+          </details>
+          <label class="field compact"
+            >执行 / 保持时长（秒）<input
+              id="hold-duration"
+              type="number"
+              value="4"
+              min="0.1"
+              max="60"
+              step="0.1" /></label
+          ><button id="import-submit" class="primary wide" type="submit">
+            检查并导入
+          </button>
+          <p id="import-feedback" class="fine" role="status">
+            计算在本机完成，本地模型不会上传。训练 checkpoint 请先导出 ONNX。
+          </p>
+        </form>
+        <div class="list-title">
+          <h3>已导入</h3>
+          <span id="saved-count">0 个动作</span>
+        </div>
+        <div id="policy-list"><p class="empty">新的本领会出现在这里。</p></div>
+        <details class="builtins">
+          <summary>内置动作</summary>
+          <div id="builtin-list"></div>
+        </details>
+      </section>
+      <div class="panel-foot">
+        Microduck Web · 本地运控 / MuJoCo<br />模型与策略来自 Pollen Robotics<br /><span
+          id="offline-status"
+          >生产版支持离线缓存</span
+        >
+      </div>
+    </aside>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
