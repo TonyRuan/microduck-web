@@ -1,3 +1,4 @@
+import { msg } from "../i18n/core";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import type { Snapshot, WorldDescription } from "../types";
@@ -71,10 +72,10 @@ export class DuckScene {
     this.home();
     canvas.addEventListener("webglcontextlost", (e) => {
       e.preventDefault();
-      onError("图形上下文暂时丢失，正在等待浏览器恢复");
+      onError(msg("图形上下文暂时丢失，正在等待浏览器恢复"));
     });
     canvas.addEventListener("webglcontextrestored", () =>
-      onError("图形已恢复，可在菜单继续仿真"),
+      onError(msg("图形已恢复，可在菜单继续仿真")),
     );
     const draw = () => {
       this.frame = requestAnimationFrame(draw);

@@ -429,7 +429,7 @@ footer {
   background: #fafdf8;
   box-shadow: 0 1px 4px #1239210c;
 }
-.tabs span {
+.tabs #policy-count {
   font-size: 10px;
   margin-left: 5px;
   color: var(--muted);
@@ -565,6 +565,40 @@ details p {
 .file-label small {
   color: var(--muted);
   font-size: 10px;
+}
+.file-picker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+.file-picker > span:last-of-type {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.file-button {
+  flex-shrink: 0;
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: #e4eee5;
+  color: var(--ink);
+}
+.file-picker:focus-within {
+  outline: 2px solid #39775b;
+  outline-offset: 4px;
+  border-radius: 7px;
+}
+.file-label .file-picker input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
 }
 .file-label input {
   font-size: 11px;

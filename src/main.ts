@@ -1,3 +1,9 @@
+import {
+  initLanguage,
+  text as setText,
+  attribute as setAttribute,
+} from "./i18n/dom";
+import { msg, errorMessage } from "./i18n/core";
 import "./style.css";
 import {
   DEFAULTS,
@@ -13,6 +19,7 @@ import { imported, fromHub } from "./policies/import";
 import { listPolicies, savePolicy, deletePolicy } from "./policies/storage";
 const $ = <T extends HTMLElement = HTMLElement>(id: string) =>
   document.getElementById(id) as T;
+initLanguage();
 const settings: Settings = { ...DEFAULTS };
 let bindings: Record<string, string> = {};
 try {
@@ -33,7 +40,7 @@ try {
 }
 let toastTimer = 0;
 function toast(message: string) {
-  $("toast").textContent = message;
+  setText($("toast"), message);
   $("toast").hidden = false;
   clearTimeout(toastTimer);
   toastTimer = window.setTimeout(() => ($("toast").hidden = true), 4200);
@@ -53,7 +60,7 @@ function persist() {
       JSON.stringify({ ...settings, bindings }),
     );
   } catch {
-    toast("浏览器没有允许保存设置，本次仍可使用");
+    toast(msg("浏览器没有允许保存设置，本次仍可使用"));
   }
 }
 async function request(type: string, data: Record<string, unknown> = {}) {
@@ -61,7 +68,7 @@ async function request(type: string, data: Record<string, unknown> = {}) {
     await sim.request(type, data);
     return true;
   } catch (e) {
-    toast((e as Error).message);
+    toast(errorMessage(e));
     return false;
   }
 }
@@ -73,7 +80,7 @@ async function action(id: string) {
     return;
   }
   if (id === "stop") {
-    toast("行走已停止 · 已触发的动作会完成");
+    toast(msg("行走已停止 · 已触发的动作会完成"));
     return;
   }
   if (id === "pause") {
@@ -91,10 +98,10 @@ async function action(id: string) {
   if (await request("action", { action: id }))
     toast(
       id === "sitstand"
-        ? "坐起切换"
+        ? msg("坐起切换")
         : (BUILTINS.find((d) => d.id === id)?.name ??
             savedPolicies.get(id)?.def.name ??
-            "动作已启动"),
+            msg("动作已启动")),
     );
 }
 const controls = new Controls(
@@ -105,18 +112,25 @@ const controls = new Controls(
 );
 controls.setEnabled(false);
 function syncPause() {
-  $("pause").innerHTML = (paused ? "继续仿真" : "暂停仿真") + " <kbd>P</kbd>";
+  setText($("pause-label"), paused ? msg("继续仿真") : msg("暂停仿真"));
   controls.setEnabled(ready && !menuOpen && !paused && !state?.fallen);
 }
 function syncMode() {
   controls.setMode(settings.mode);
   $("control-mode").setAttribute("data-active", controls.mode);
-  $("mode-help").textContent =
-    `当前使用${controls.mode === "touch" ? "触屏摇杆" : "键盘控制"}，可以手动切换。`;
-  $("gesture-hint").textContent =
+  setText(
+    $("mode-help"),
+    msg(
+      "当前使用{0}，可以手动切换。",
+      controls.mode === "touch" ? msg("触屏摇杆") : msg("键盘控制"),
+    ),
+  );
+  setText(
+    $("gesture-hint"),
     controls.mode === "touch"
-      ? "单指旋转 · 双指缩放 / 平移"
-      : "拖动旋转 · 右键平移 · 滚轮缩放";
+      ? msg("单指旋转 · 双指缩放 / 平移")
+      : msg("拖动旋转 · 右键平移 · 滚轮缩放"),
+  );
 }
 function toggleMenu(open = !menuOpen) {
   menuOpen = open;
@@ -137,6 +151,12 @@ function tab(which: "controls" | "library") {
 }
 $("tab-controls").onclick = () => tab("controls");
 $("tab-library").onclick = () => tab("library");
+for (const id of ["model-file", "manifest-file"]) {
+  $(id).addEventListener("change", () => {
+    const file = $<HTMLInputElement>(id).files?.[0];
+    setText($(id + "-name"), file?.name ?? msg("未选择文件"));
+  });
+}
 $("menu-toggle").onclick = () => toggleMenu();
 $("menu-close").onclick = () => toggleMenu(false);
 $("ball-left").onclick = () => void request("ball", { side: "left" });
@@ -148,7 +168,7 @@ $("reset").onclick = async () => {
   controls.clear();
   if (await request("reset", { profile: settings.profile })) {
     scene.home();
-    toast("鸭子与场景已重置");
+    toast(msg("鸭子与场景已重置"));
   }
 };
 document
@@ -169,8 +189,10 @@ for (const key of ["forward", "backward", "turn"] as const) {
   const input = $<HTMLInputElement>(key);
   input.value = String(settings[key]);
   const update = () => {
-    $(key + "-value").textContent =
-      settings[key].toFixed(2) + (key === "turn" ? " rad/s" : " m/s");
+    setText(
+      $(key + "-value"),
+      settings[key].toFixed(2) + (key === "turn" ? " rad/s" : " m/s"),
+    );
   };
   update();
   input.addEventListener("input", () => {
@@ -205,8 +227,10 @@ $("defaults").onclick = async () => {
   persist();
   for (const key of ["forward", "backward", "turn"] as const) {
     $<HTMLInputElement>(key).value = String(settings[key]);
-    $(key + "-value").textContent =
-      settings[key].toFixed(2) + (key === "turn" ? " rad/s" : " m/s");
+    setText(
+      $(key + "-value"),
+      settings[key].toFixed(2) + (key === "turn" ? " rad/s" : " m/s"),
+    );
   }
   $<HTMLSelectElement>("profile").value = "velstand";
   $<HTMLSelectElement>("control-mode").value = "auto";
@@ -214,11 +238,11 @@ $("defaults").onclick = async () => {
   scene.follow = true;
   scene.home();
   syncMode();
-  toast("已恢复默认策略、速度和控制方式；导入文件仍保留在动作库");
+  toast(msg("已恢复默认策略、速度和控制方式；导入文件仍保留在动作库"));
 };
 function renderLibrary() {
-  $("policy-count").textContent = String(savedPolicies.size);
-  $("saved-count").textContent = savedPolicies.size + " 个策略";
+  setText($("policy-count"), String(savedPolicies.size));
+  setText($("saved-count"), msg("{0} 个策略", savedPolicies.size));
   const list = $("policy-list");
   list.replaceChildren();
   const select = $<HTMLSelectElement>("profile");
@@ -227,7 +251,7 @@ function renderLibrary() {
   if (!savedPolicies.size) {
     const p = document.createElement("p");
     p.className = "empty";
-    p.textContent = "新的本领会出现在这里。";
+    setText(p, msg("新的本领会出现在这里。"));
     list.append(p);
   }
   for (const p of savedPolicies.values()) {
@@ -236,26 +260,30 @@ function renderLibrary() {
     item.className = "policy-item";
     item.dataset.policy = d.id;
     const title = document.createElement("h4");
-    title.textContent = d.name;
+    setText(title, d.name);
     const desc = document.createElement("p");
-    desc.textContent = d.description;
+    setText(desc, d.description);
     const source = document.createElement("p");
     source.className = "source";
-    source.textContent =
-      d.source +
-      (d.slot
-        ? " · " +
-          {
-            walk: "行走步态",
-            stand: "站立策略",
-            sitstand: "坐起策略",
-            ground_pick: "捡拾策略",
-          }[d.slot]
-        : ` · ${d.duration} 秒`);
+    setText(
+      source,
+      msg(
+        "{0} · {1}",
+        d.source,
+        d.slot
+          ? {
+              walk: msg("行走步态"),
+              stand: msg("站立策略"),
+              sitstand: msg("坐起策略"),
+              ground_pick: msg("捡拾策略"),
+            }[d.slot]
+          : msg("{0} 秒", d.duration),
+      ),
+    );
     const row = document.createElement("div");
     row.className = "policy-actions";
     const run = document.createElement("button");
-    run.textContent = d.slot ? "应用策略" : "执行动作";
+    setText(run, d.slot ? msg("应用策略") : msg("执行动作"));
     run.onclick = async () => {
       if (d.slot === "walk") {
         if (await request("reset", { profile: d.id })) {
@@ -263,27 +291,27 @@ function renderLibrary() {
           select.value = d.id;
           persist();
           scene.home();
-          toast("已应用 " + d.name);
+          toast(msg("已应用 {0}", d.name));
         }
       } else if (d.slot) {
         bindings[d.slot] = d.id;
         if (await request("bindings", { bindings })) {
           await request("reset", { profile: settings.profile });
           persist();
-          toast("已应用 " + d.name);
+          toast(msg("已应用 {0}", d.name));
         }
       } else await action(d.id);
     };
     const remove = document.createElement("button");
     remove.className = "remove";
-    remove.textContent = "移除";
-    remove.setAttribute("aria-label", "移除 " + d.name);
+    setText(remove, msg("移除"));
+    setAttribute(remove, "aria-label", msg("移除 {0}", d.name));
     remove.onclick = async () => {
       if (!(await request("remove", { policy: d.id }))) return;
       try {
         await deletePolicy(d.id);
       } catch {
-        toast("本次已移除，但浏览器未能更新保存记录");
+        toast(msg("本次已移除，但浏览器未能更新保存记录"));
       }
       savedPolicies.delete(d.id);
       if (settings.profile === d.id) settings.profile = "velstand";
@@ -291,7 +319,7 @@ function renderLibrary() {
         if (bindings[k] === d.id) delete bindings[k];
       persist();
       renderLibrary();
-      toast("已移除 " + d.name);
+      toast(msg("已移除 {0}", d.name));
     };
     row.append(run, remove);
     item.append(title, desc, source, row);
@@ -302,7 +330,7 @@ function renderLibrary() {
 }
 for (const d of BUILTINS.filter((d) => d.kind !== "perpetual")) {
   const b = document.createElement("button");
-  b.textContent = d.name;
+  setText(b, d.name);
   b.onclick = () => void action(d.id === "pick" ? "pick" : d.id);
   $("builtin-list").append(b);
 }
@@ -314,11 +342,11 @@ $("import-form").addEventListener("submit", async (e) => {
   $<HTMLButtonElement>("import-submit").disabled = true;
   const feedback = $("import-feedback");
   feedback.dataset.error = "false";
-  feedback.textContent = "正在检查模型与动作清单…";
+  setText(feedback, msg("正在检查模型与动作清单…"));
   try {
     const hold = Number($<HTMLInputElement>("hold-duration").value);
     if (!Number.isFinite(hold) || hold <= 0 || hold > 60)
-      throw new Error("保持时长应在 0–60 秒之间");
+      throw new Error(msg("保持时长应在 0–60 秒之间"));
     const kind = $<HTMLSelectElement>("import-kind").value;
     const manual = {
       name: $<HTMLInputElement>("import-name").value.trim(),
@@ -328,13 +356,14 @@ $("import-form").addEventListener("submit", async (e) => {
     let policy: SavedPolicy;
     const file = $<HTMLInputElement>("model-file").files?.[0];
     if (file) {
-      if (file.size > 32 * 1024 * 1024) throw new Error("单个模型限 32 MB");
+      if (file.size > 32 * 1024 * 1024)
+        throw new Error(msg("单个模型限 32 MB"));
       if (!file.name.endsWith(".onnx"))
-        throw new Error("请选择导出的 .onnx 文件");
+        throw new Error(msg("请选择导出的 .onnx 文件"));
       const mf = $<HTMLInputElement>("manifest-file").files?.[0];
       let manifest: unknown;
       if (mf) {
-        if (mf.size > 1024 * 1024) throw new Error("动作清单过大");
+        if (mf.size > 1024 * 1024) throw new Error(msg("动作清单过大"));
         manifest = JSON.parse(await mf.text());
       } else {
         const kind = $<HTMLSelectElement>("import-kind").value;
@@ -350,29 +379,31 @@ $("import-form").addEventListener("submit", async (e) => {
         await file.arrayBuffer(),
         manifest,
         file.name.replace(/\.onnx$/, ""),
-        "本地文件 · " + file.name,
+        msg("本地文件 · {0}", file.name),
         hold,
       );
     } else {
       const repo = $<HTMLInputElement>("hub-repo").value.trim();
-      if (!repo) throw new Error("请选择 ONNX 文件或填写公开模型仓库");
+      if (!repo) throw new Error(msg("请选择 ONNX 文件或填写公开模型仓库"));
       policy = await fromHub(repo, hold, manual);
     }
-    feedback.textContent = "接口检查与试推理中…";
+    setText(feedback, msg("接口检查与试推理中…"));
     await sim.request("register", { def: policy.def, bytes: policy.bytes });
     try {
       await savePolicy(policy);
     } catch {
-      toast("策略已载入，但浏览器未允许持久保存；关闭网页后需重新导入");
+      toast(msg("策略已载入，但浏览器未允许持久保存；关闭网页后需重新导入"));
     }
     savedPolicies.set(policy.def.id, policy);
     renderLibrary();
-    feedback.textContent =
-      "已导入「" + policy.def.name + "」。可在下方试运行，或应用为步态。";
-    toast("新本领已加入动作库");
+    setText(
+      feedback,
+      msg("已导入「{0}」。可在下方试运行，或应用为步态。", policy.def.name),
+    );
+    toast(msg("新本领已加入动作库"));
   } catch (e) {
     feedback.dataset.error = "true";
-    feedback.textContent = (e as Error).message || "导入失败，请检查模型文件";
+    setText(feedback, errorMessage(e));
   } finally {
     importing = false;
     $<HTMLButtonElement>("import-submit").disabled = false;
@@ -381,7 +412,7 @@ $("import-form").addEventListener("submit", async (e) => {
 function fatal(message: string) {
   toast(message);
   if (!ready) {
-    $("loading-text").textContent = message;
+    setText($("loading-text"), message);
     $("retry").hidden = false;
   } else {
     paused = true;
@@ -392,7 +423,7 @@ function fatal(message: string) {
 $("retry").onclick = () => location.reload();
 sim.onError = fatal;
 sim.onProgress = (message, p) => {
-  $("loading-text").textContent = message;
+  setText($("loading-text"), message);
   $<HTMLProgressElement>("load-progress").value = p;
 };
 let lastText = "";
@@ -400,20 +431,22 @@ sim.onState = (s) => {
   state = s;
   scene?.update(s);
   const text = s.fallen
-    ? "已倒地 · 菜单中重置"
+    ? msg("已倒地 · 菜单中重置")
     : s.paused
-      ? "仿真已暂停"
+      ? msg("仿真已暂停")
       : s.busy
         ? s.label
-        : `本地运行  ${s.hz.toFixed(0)} Hz`;
+        : msg("本地运行  {0} Hz", s.hz.toFixed(0));
   if (text !== lastText) {
-    $("status").querySelector("span")!.textContent = text;
+    setText($("status").querySelector("span")!, text);
     lastText = text;
   }
   $("status").dataset.state = s.fallen ? "error" : "ok";
-  $("sit").textContent = s.seated ? "站起" : "坐下";
-  $("telemetry").textContent =
-    `${s.vx >= 0 ? "+" : ""}${s.vx.toFixed(2)} m/s  ·  ${s.yaw >= 0 ? "+" : ""}${s.yaw.toFixed(2)} rad/s`;
+  setText($("sit"), s.seated ? msg("站起") : msg("坐下"));
+  setText(
+    $("telemetry"),
+    `${s.vx >= 0 ? "+" : ""}${s.vx.toFixed(2)} m/s  ·  ${s.yaw >= 0 ? "+" : ""}${s.yaw.toFixed(2)} rad/s`,
+  );
   if (s.fallen) {
     controls.clear();
     controls.setEnabled(false);
@@ -448,11 +481,11 @@ async function boot() {
           await sim.request("register", { def: p.def, bytes: p.bytes });
           savedPolicies.set(p.def.id, p);
         } catch {
-          toast("保存的「" + p.def.name + "」未能载入，请重新导入");
+          toast(msg("保存的「{0}」未能载入，请重新导入", p.def.name));
         }
       }
     } catch {
-      toast("浏览器存储不可用，本次仍可操控和导入");
+      toast(msg("浏览器存储不可用，本次仍可操控和导入"));
     }
     if (
       !["velstand", "alpha"].includes(settings.profile) &&
@@ -474,15 +507,15 @@ async function boot() {
       navigator.serviceWorker
         .register(base + "sw.js", { scope: base })
         .then(async () => {
-          $("offline-status").textContent = "正在准备离线资源…";
+          setText($("offline-status"), msg("正在准备离线资源…"));
           await navigator.serviceWorker.ready;
-          $("offline-status").textContent = "离线资源已就绪";
+          setText($("offline-status"), msg("离线资源已就绪"));
         })
         .catch(() => {
-          $("offline-status").textContent = "离线缓存未完成，当前仍可在线使用";
+          setText($("offline-status"), msg("离线缓存未完成，当前仍可在线使用"));
         });
   } catch (e) {
-    fatal("启动失败：" + (e as Error).message);
+    fatal(msg("启动失败：{0}", errorMessage(e)));
   }
 }
 void boot();

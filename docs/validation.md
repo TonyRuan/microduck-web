@@ -1,5 +1,25 @@
 # 验证记录
 
+## 中英双语回归（2026-10-22）
+
+Windows / Node 24.14.0 / Edge 155（Playwright，软件 WebGL）。`npm test` 包含 11 项测试：原有真实 WASM / ONNX 与八个策略闭环检查，以及语言选择、存储拒绝、消息参数和翻译完整性检查。`npm run build` 检查 TypeScript 并生成静态包与离线缓存。
+
+`npm run test:i18n` 使用仅在 Playwright 中注入的 `ui-worker-stub.mjs`，不下载模型、WASM，不运行运动仿真，并阻止 Service Worker 安装缓存。覆盖首次 `zh-CN` / `zh-TW` / `zh-HK` / `en-US` / `fr-FR`，手动选择、刷新保留、恢复跟随浏览器、`languagechange`、重复切换、模拟的暂停与动作状态、动态错误、JSON 清单错误、导入表单、用户元数据保留，以及 412×915 / 915×412 触屏布局。测试记录 Worker 消息，检查语言切换没有发出重置、暂停、重新初始化或策略修改请求。stub 不进入生产包，生产默认模型加载逻辑不变。
+
+初轮真实模型的语言专项与原有完整浏览器交互回归均通过。随后按 UI 验收范围缩小为上述 stub 检查；不再重跑运动仿真。额外的本地生产静态 / 离线回归未完成：Edge 中首次启动报告 ONNX 加载失败，具体原因未定位，没有据此宣称生产仿真或离线回归通过。
+
+```sh
+npm test
+npm run build
+npm run dev
+# 另一个终端；CHROME_PATH 可指向已安装的 Chrome / Chromium / Edge
+npm run test:i18n
+```
+
+`QA_URL` 可指定带 `?qa` 的本地或线上地址；`QA_OUTPUT_DIR` 可指定截图与 JSON 证据目录，语言测试默认输出到仓库外的 `../i18n-qa/`。已有中文交互脚本显式使用 `zh-CN`，避免测试受执行机默认语言影响。软件 WebGL 和移动端浏览器模拟不代表实体手机或 Safari / Firefox 验证。
+
+## 此前的仿真与交互验证
+
 日期：2026-09-19。环境：macOS ARM64 / Node 26.5.0，Chrome + 官方 MuJoCo 3.13.0 WASM / ORT 1.30.0。脚本运行真实模型与物理；没有用动画或假状态替代控制环。
 
 ## 已通过

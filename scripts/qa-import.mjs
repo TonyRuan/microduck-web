@@ -21,6 +21,7 @@ const browser = await chromium.launch({
   args: ["--enable-unsafe-swiftshader"],
 });
 const context = await browser.newContext({
+  locale: "zh-CN",
   viewport: { width: 1440, height: 1000 },
 });
 const page = await context.newPage();

@@ -1,3 +1,4 @@
+import { msg } from "../i18n/core";
 import type { MainModule, MjModel, MjData } from "@mujoco/mujoco";
 import {
   JOINTS,
@@ -35,7 +36,7 @@ export class Physics {
       const a = mj.mj_name2id(m, 19, name),
         j = mj.mj_name2id(m, 3, name);
       if (name !== "mouth" && (a < 0 || j < 0))
-        throw new Error("模型缺少关节 " + name);
+        throw new Error(msg("模型缺少关节 {0}", name));
       this.act.push(a);
       this.pos.push(j < 0 ? -1 : m.jnt_qposadr[j]);
       this.vel.push(j < 0 ? -1 : m.jnt_dofadr[j]);
@@ -43,7 +44,7 @@ export class Physics {
     }
     const joint = (name: string) => {
       const j = mj.mj_name2id(m, 3, name);
-      if (j < 0) throw new Error("缺少自由关节 " + name);
+      if (j < 0) throw new Error(msg("缺少自由关节 {0}", name));
       return j;
     };
     let j = joint("trunk_base_freejoint");
@@ -133,7 +134,7 @@ export class Physics {
     } else for (let i = 0; i < 15; i++) if (this.act[i] >= 0) this.gain(i, 0.1);
     for (let i = 0; i < 4; i++) this.mj.mj_step(this.model, this.data);
     if (!this.data.qpos.every(Number.isFinite))
-      throw new Error("物理状态无效，请重置场景");
+      throw new Error(msg("物理状态无效，请重置场景"));
     // Update visual positions at the completed time step.
     this.mj.mj_forward(this.model, this.data);
     this.total++;

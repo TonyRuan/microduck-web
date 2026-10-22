@@ -1,3 +1,4 @@
+import { msg, errorMessage } from "../i18n/core";
 import type { Request, Snapshot, WorldDescription } from "../types";
 export class SimulationClient {
   worker = new Worker(new URL("./worker.ts", import.meta.url), {
@@ -14,7 +15,9 @@ export class SimulationClient {
   async start(base: string): Promise<WorldDescription> {
     return new Promise((resolve, reject) => {
       this.worker.onerror = (e) => {
-        const message = e.message || "浏览器未能启动仿真线程";
+        const message = e.message
+          ? errorMessage(new Error(e.message))
+          : msg("浏览器未能启动仿真线程");
         reject(new Error(message));
         this.onError(message);
       };
@@ -52,7 +55,8 @@ export class SimulationClient {
   }
   dispose() {
     this.worker.terminate();
-    for (const p of this.pending.values()) p.reject(new Error("仿真已关闭"));
+    for (const p of this.pending.values())
+      p.reject(new Error(msg("仿真已关闭")));
     this.pending.clear();
   }
 }

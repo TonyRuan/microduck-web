@@ -1,3 +1,4 @@
+import { msg } from "../i18n/core";
 import type { SavedPolicy } from "../types";
 const db = () =>
   new Promise<IDBDatabase>((resolve, reject) => {
@@ -25,7 +26,7 @@ async function transaction<T>(
     };
     tx.onabort = () => {
       d.close();
-      reject(tx.error ?? new Error("浏览器存储不可用"));
+      reject(tx.error ?? new Error(msg("浏览器存储不可用")));
     };
   });
 }

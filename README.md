@@ -32,20 +32,22 @@ The repository uses `.github/workflows/pages.yml` to test, build, and deploy `di
 
 ## Controls
 
+The interface supports English and Simplified Chinese. On first use it follows your browser's preferred language: `zh` variants use Chinese, and other languages use English. In Menu → Controls → Language, choose Follow browser, English, or 中文. Explicit choices are saved locally and take priority over browser detection; choose Follow browser to restore automatic selection. Switching updates the interface immediately without reloading or resetting the simulation, policies, or robot. If browser storage is blocked, language switching still works for the current session.
+
 Mobile browsers show a translucent joystick and action buttons by default; desktop browsers use the keyboard. The menu lets you choose Auto / Touch / Keyboard, and saves your choice. Default command speeds are **0.4 m/s** forward, **0.4 m/s** backward, and **1.0 rad/s** turning. These are policy commands; actual motion depends on the physics state and policy.
 
-| Action | Desktop | Mobile |
-| --- | --- | --- |
-| Move forward/backward and turn left/right | WASD / arrow keys | Left joystick |
-| Sit down / stand up | C | Sit/stand button |
-| Roll | R | Roll button |
-| Left / right kick | Q / E | Left / right kick buttons |
-| Pick up | F | Pick-up button |
-| Place the ball in front of the right foot | B | Place-ball button |
-| Pause / resume | P / menu | Menu |
-| Stop walking | Space / top stop button | Top stop button |
-| Reset camera | 0 / crosshair | Crosshair |
-| Orbit / pan / zoom | Drag / right-drag / scroll wheel | One-finger drag / two-finger drag / pinch |
+| Action                                    | Desktop                          | Mobile                                    |
+| ----------------------------------------- | -------------------------------- | ----------------------------------------- |
+| Move forward/backward and turn left/right | WASD / arrow keys                | Left joystick                             |
+| Sit down / stand up                       | C                                | Sit/stand button                          |
+| Roll                                      | R                                | Roll button                               |
+| Left / right kick                         | Q / E                            | Left / right kick buttons                 |
+| Pick up                                   | F                                | Pick-up button                            |
+| Place the ball in front of the right foot | B                                | Place-ball button                         |
+| Pause / resume                            | P / menu                         | Menu                                      |
+| Stop walking                              | Space / top stop button          | Top stop button                           |
+| Reset camera                              | 0 / crosshair                    | Crosshair                                 |
+| Orbit / pan / zoom                        | Drag / right-drag / scroll wheel | One-finger drag / two-finger drag / pinch |
 
 The menu also provides ball placement in front of either foot, speed, gait, follow camera, scene reset, restore defaults, and the action library. The ball responds to physical contact forces; place it in front of the appropriate foot before kicking. Stop clears movement commands while allowing an action already in progress to finish; Pause freezes the simulation immediately. Losing focus, changing input modes, or releasing the joystick clears movement commands. Moving the app to the background pauses it.
 
@@ -73,6 +75,7 @@ The controller is ported from the original project's Rust control logic, preserv
 ```sh
 npm test                    # Real WASM / ONNX + controller contract tests
 npm run test:browser        # Chrome desktop, touch, actions, camera, and settings persistence
+npm run test:i18n           # Browser languages, saved preferences, live switching, and mobile layout
 node scripts/qa-import.mjs  # Real community repository import regression; requires network access
 node scripts/qa-static.mjs  # Production subdirectory, offline cache, and mobile two-finger gestures
 ```

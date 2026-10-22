@@ -1,7 +1,10 @@
 import { chromium } from "@playwright/test";
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
-await mkdir("qa-output", { recursive: true });
+const output = process.env.QA_OUTPUT_DIR ?? "qa-output";
+const screenshots = process.env.QA_SCREENSHOT_DIR ?? "docs/images";
+await mkdir(output, { recursive: true });
+await mkdir(screenshots, { recursive: true });
 const browser = await chromium.launch({
   executablePath:
     process.env.CHROME_PATH ??
@@ -10,6 +13,7 @@ const browser = await chromium.launch({
   args: ["--enable-unsafe-swiftshader"],
 });
 const context = await browser.newContext({
+  locale: "zh-CN",
   viewport: { width: 1440, height: 900 },
 });
 const page = await context.newPage();
@@ -47,7 +51,7 @@ try {
   assert.equal(s.mode, "keyboard");
   assert.equal(s.state.fallen, false);
   assert.equal(s.settings.forward, 0.4);
-  await page.screenshot({ path: "docs/images/desktop.png" });
+  await page.screenshot({ path: screenshots + "/desktop.png" });
   await page.keyboard.press("p");
   await page.waitForTimeout(150);
   assert.equal((await snapshot()).state.paused, true);
@@ -112,7 +116,7 @@ try {
   assert.equal((await snapshot()).state.time, t);
   await page.locator("#pause").click();
   await page.locator("#control-mode").selectOption("touch");
-  await page.screenshot({ path: "docs/images/menu.png" });
+  await page.screenshot({ path: screenshots + "/menu.png" });
   await page.locator("#menu-close").click();
   assert.equal((await snapshot()).mode, "touch");
   const box = await page.locator("#joystick").boundingBox();
@@ -138,6 +142,7 @@ try {
   await report("saved-settings");
   await context.close();
   const mobile = await browser.newContext({
+    locale: "zh-CN",
     viewport: { width: 412, height: 915 },
     isMobile: true,
     hasTouch: true,
@@ -155,13 +160,13 @@ try {
     await p.evaluate(() => document.documentElement.scrollWidth > innerWidth),
     false,
   );
-  await p.screenshot({ path: "docs/images/mobile.png" });
+  await p.screenshot({ path: screenshots + "/mobile.png" });
   await mobile.close();
   assert.deepEqual(errors, []);
   console.log("PASS");
 } finally {
   await writeFile(
-    "qa-output/browser.json",
+    output + "/browser.json",
     JSON.stringify({ reports, errors }, null, 2),
   );
   await browser.close();

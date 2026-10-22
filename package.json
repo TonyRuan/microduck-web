@@ -12,6 +12,7 @@
     "prebuild": "node scripts/copy-runtime.mjs",
     "postinstall": "node scripts/copy-runtime.mjs",
     "test:browser": "node scripts/qa-browser.mjs",
+    "test:i18n": "node scripts/qa-i18n.mjs",
     "format": "prettier --write src tests scripts index.html vite.config.ts",
     "test:static": "node scripts/qa-static.mjs"
   },

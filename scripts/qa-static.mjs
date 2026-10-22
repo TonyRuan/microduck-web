@@ -1,7 +1,10 @@
 import { chromium } from "@playwright/test";
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
-await mkdir("qa-output", { recursive: true });
+const output = process.env.QA_OUTPUT_DIR ?? "qa-output";
+const screenshots = process.env.QA_SCREENSHOT_DIR ?? "docs/images";
+await mkdir(output, { recursive: true });
+await mkdir(screenshots, { recursive: true });
 const url = process.env.QA_URL ?? "http://127.0.0.1:5174/microduck/?qa";
 const browser = await chromium.launch({
   executablePath:
@@ -12,7 +15,7 @@ const browser = await chromium.launch({
 });
 const out = {};
 try {
-  const context = await browser.newContext();
+  const context = await browser.newContext({ locale: "zh-CN" });
   const p = await context.newPage();
   const errors = [];
   p.on("pageerror", (e) => errors.push(String(e)));
@@ -39,6 +42,7 @@ try {
   assert.deepEqual(errors, []);
   await context.close();
   const mobile = await browser.newContext({
+    locale: "zh-CN",
     viewport: { width: 412, height: 915 },
     isMobile: true,
     hasTouch: true,
@@ -110,7 +114,7 @@ try {
     ),
     false,
   );
-  await page.screenshot({ path: "docs/images/landscape.png" });
+  await page.screenshot({ path: screenshots + "/landscape.png" });
   await page.getByRole("button", { name: "打开菜单", exact: true }).click();
   await page.locator("#control-mode").selectOption("keyboard");
   await page.locator("#menu-close").click();
@@ -132,6 +136,6 @@ try {
     "PASS static subpath, offline, pinch, pan, touch release, landscape, reverse/yaw",
   );
 } finally {
-  await writeFile("qa-output/static.json", JSON.stringify(out, null, 2));
+  await writeFile(output + "/static.json", JSON.stringify(out, null, 2));
   await browser.close();
 }
