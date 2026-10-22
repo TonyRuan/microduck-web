@@ -1,94 +1,96 @@
 # Microduck Web
 
-在浏览器里操控 Microduck。原始 MJCF / STL 机器人、MuJoCo 物理和 ONNX 运控策略都在本机运行，可部署为纯静态站点。
+[English](README.md) | [简体中文](README.zh-CN.md)
 
-[在线体验](https://tonyruan.github.io/microduck-web/) · [GitHub 仓库](https://github.com/TonyRuan/microduck-web)
+Control Microduck in your browser. The original MJCF / STL robot, MuJoCo physics, and ONNX locomotion policies all run locally. The app can be deployed as a fully static site.
 
-![桌面键盘界面](docs/images/desktop.png)
+[Live demo](https://tonyruan.github.io/microduck-web/) · [GitHub repository](https://github.com/TonyRuan/microduck-web)
 
-## 开始使用
+![Desktop keyboard interface](docs/images/desktop.png)
 
-需要 Node.js 22.12+（或 20.19+）。在此独立项目目录执行：
+## Getting started
+
+Requires Node.js 22.12+ (or 20.19+). Run these commands from this standalone project's directory:
 
 ```sh
 npm ci
 npm run dev
 ```
 
-打开终端显示的本地地址。首次需要下载机器人、八个内置策略与 WASM 引擎。当前发布目录约 74 MiB（未压缩），静态托管建议开启 gzip / Brotli。不要直接双击 `index.html`：Worker、资源请求和模块需要 HTTP(S)。
+Open the local URL shown in the terminal. The first load downloads the robot, eight built-in policies, and the WASM engine. The current deployment directory is about 74 MiB uncompressed; enable gzip / Brotli on your static host. Serve the app over HTTP(S): opening `index.html` directly will not support its Worker, resource requests, and modules.
 
 ```sh
 npm run build
 npm run preview
 ```
 
-`dist/` 是完整静态发布目录；不需要 Node 服务、Python 服务、登录或远程推理。生产环境使用 HTTPS；`localhost` 可用于本地测试。支持部署在域名下的子目录，例如 `/microduck/`。构建包含离线缓存，首次成功加载并完成后台缓存后可断网重新打开；浏览器清理站点数据会移除缓存与导入的模型。
+`dist/` contains the complete static deployment. No Node server, Python server, login, or remote inference is needed. Use HTTPS in production; `localhost` works for local testing. Deployment under a subdirectory, such as `/microduck/`, is supported. The build includes offline caching: after the first successful load and completion of background caching, the app can be reopened without a network connection. Clearing the browser's site data removes the cache and imported models.
 
-## GitHub Pages 发布
+## GitHub Pages deployment
 
-仓库使用 `.github/workflows/pages.yml` 自动测试、构建并发布 `dist/`。默认分支 `codex/static-web` 的每次推送会触发部署，也可在 Actions 中手动运行 Deploy Microduck Web。Pages 的构建来源设置为 GitHub Actions；正式地址为 https://tonyruan.github.io/microduck-web/ 。
+The repository uses `.github/workflows/pages.yml` to test, build, and deploy `dist/` automatically. Every push to the default branch, `codex/static-web`, triggers deployment. You can also run Deploy Microduck Web manually in Actions. Set the Pages build source to GitHub Actions. The production URL is https://tonyruan.github.io/microduck-web/ .
 
-## 操控
+## Controls
 
-移动浏览器默认显示半透明摇杆与动作键，桌面默认键盘；菜单可切换“自动 / 触屏 / 键盘”，选择会保存。默认前进 **0.4 m/s**、后退 **0.4 m/s**、转弯 **1.0 rad/s**。这里是策略的指令值，实际运动速度由物理状态与策略决定。
+Mobile browsers show a translucent joystick and action buttons by default; desktop browsers use the keyboard. The menu lets you choose Auto / Touch / Keyboard, and saves your choice. Default command speeds are **0.4 m/s** forward, **0.4 m/s** backward, and **1.0 rad/s** turning. These are policy commands; actual motion depends on the physics state and policy.
 
-| 操作 | 电脑 | 手机 |
+| Action | Desktop | Mobile |
 | --- | --- | --- |
-| 前后移动、左右转向 | WASD / 方向键 | 左侧摇杆 |
-| 坐下 / 站起 | C | 坐起按钮 |
-| 翻滚 | R | 翻滚按钮 |
-| 左 / 右踢 | Q / E | 左踢 / 右踢 |
-| 捡拾 | F | 捡拾按钮 |
-| 放球到右脚前 | B | 放球按钮 |
-| 暂停 / 继续 | P / 菜单 | 菜单 |
-| 停止行走 | 空格 / 顶部停止 | 顶部停止 |
-| 恢复视角 | 0 / 准星 | 准星 |
-| 旋转 / 平移 / 缩放 | 拖动 / 右键拖动 / 滚轮 | 单指拖动 / 双指拖动 / 捏合 |
+| Move forward/backward and turn left/right | WASD / arrow keys | Left joystick |
+| Sit down / stand up | C | Sit/stand button |
+| Roll | R | Roll button |
+| Left / right kick | Q / E | Left / right kick buttons |
+| Pick up | F | Pick-up button |
+| Place the ball in front of the right foot | B | Place-ball button |
+| Pause / resume | P / menu | Menu |
+| Stop walking | Space / top stop button | Top stop button |
+| Reset camera | 0 / crosshair | Crosshair |
+| Orbit / pan / zoom | Drag / right-drag / scroll wheel | One-finger drag / two-finger drag / pinch |
 
-菜单另外提供左右脚前放球、速度、步态、跟随相机、重置场景、恢复默认值与动作库。球受真实接触力驱动；需要把球放到相应脚前再踢。停止清空移动指令，已经启动的动作会完成；暂停立即冻结仿真。失焦、切换输入模式、松开摇杆会清空移动，切到后台会暂停。
+The menu also provides ball placement in front of either foot, speed, gait, follow camera, scene reset, restore defaults, and the action library. The ball responds to physical contact forces; place it in front of the appropriate foot before kicking. Stop clears movement commands while allowing an action already in progress to finish; Pause freezes the simulation immediately. Losing focus, changing input modes, or releasing the joystick clears movement commands. Moving the app to the background pauses it.
 
-<p align="center"><img src="docs/images/mobile.png" width="300" alt="触屏界面"> <img src="docs/images/menu.png" width="540" alt="展开设置"></p>
+<p align="center"><img src="docs/images/mobile.png" width="300" alt="Touch interface"> <img src="docs/images/menu.png" width="540" alt="Expanded settings"></p>
 
-## 导入社区新动作
+## Importing community actions
 
-菜单 → 动作库：选择本地 `.onnx` 与 `manifest.json`，或者输入公开 Hugging Face 模型仓库 `作者/仓库`。网页检查输入输出并实际试推理，成功后存入浏览器 IndexedDB；无需修改源码或重新打包。
+Open Menu → Action library. Select a local `.onnx` file and `manifest.json`, or enter a public Hugging Face model repository as `author/repository`. The app checks the inputs and outputs and runs a trial inference. Successful imports are saved in the browser's IndexedDB; no source changes or rebuild are needed.
 
-- 一次性动作会新增“执行动作”；步态、站立、坐起和捡拾策略可应用到相应控制位置。
-- 没有清单时，展开“补充动作信息”，手动设置名称、用途和时长。网络仓库没有清单时也使用这些设置；网页不能从权重猜出动作含义。
-- 支持兼容的 MLP 与显式隐藏状态 LSTM ONNX。不是所有 RL checkpoint 都能直接使用；`.pt` 需要在训练项目中导出 ONNX。
-- 具体接口、持续姿态、自定义指令、限制和示例见 [模型导入规范](docs/policy-import.md)。
+- One-shot actions add an Execute action control. Gait, standing, sit/stand, and pick-up policies can be assigned to their corresponding controls.
+- Without a manifest, expand the additional action information section and enter the name, purpose, and duration manually. These settings also apply to online repositories without a manifest; the app cannot infer an action's meaning from its weights.
+- Compatible MLP and explicit-hidden-state LSTM ONNX models are supported. Not every RL checkpoint can be used directly; export `.pt` files to ONNX in the training project.
+- See the [model import specification](docs/policy-import.md) for interfaces, sustained poses, custom commands, limitations, and examples.
 
-已测试公开社区模型 [fffiloni/microduck-polite-bow-b1d864](https://huggingface.co/fffiloni/microduck-polite-bow-b1d864)：网页下载、导入、执行鞠躬、刷新恢复与移除。这个仓库没有 manifest，测试时采用一次性动作、4 秒；模型按下载时的提交 SHA 固定版本。
+The public community model [fffiloni/microduck-polite-bow-b1d864](https://huggingface.co/fffiloni/microduck-polite-bow-b1d864) has been tested for download, import, bow execution, restoration after refresh, and removal. This repository has no manifest; the test used a one-shot action with a duration of 4 seconds. The model version was pinned to its commit SHA at download time.
 
-![社区动作导入](docs/images/community.png)
+![Community action import](docs/images/community.png)
 
-## 技术与验证
+## Technology and validation
 
-TypeScript / Vite、Three.js、MuJoCo 3.13.0 WASM、ONNX Runtime Web 1.30.0。50 Hz 控制，每次控制推进四个 5 ms 物理步；物理与推理在 Worker，主线程处理输入和绘制。设备性能不足时模拟时间会变慢，页面显示实测控制频率。
+TypeScript / Vite, Three.js, MuJoCo 3.13.0 WASM, and ONNX Runtime Web 1.30.0. Control runs at 50 Hz, advancing four 5 ms physics steps per control step. Physics and inference run in a Worker; the main thread handles input and rendering. Simulation time slows down on devices with insufficient performance, and the page displays the measured control frequency.
 
-运控移植自原项目的 Rust 控制逻辑，保留 61 维观测、14 维动作、关节顺序、HOME、滤波、技能计时和增益切换。不是直接运行 Android 的 Rust 静态库；Web 的 MuJoCo 版本也与 Android 3.3.7 不同。实现与出处见 [架构](docs/architecture.md)、[第三方说明](THIRD_PARTY_NOTICES.md)。
+The controller is ported from the original project's Rust control logic, preserving the 61-dimensional observations, 14-dimensional actions, joint order, HOME, filtering, skill timing, and gain switching. It does not run the Android Rust static library directly, and the Web MuJoCo version differs from Android's 3.3.7. See the [architecture](docs/architecture.md) and [third-party notices](THIRD_PARTY_NOTICES.md) for implementation details and sources.
 
 ```sh
-npm test                    # 真实 WASM / ONNX + 控制器契约测试
-npm run test:browser        # Chrome 桌面、触屏、动作、相机与设置保存
-node scripts/qa-import.mjs  # 真实社区仓库导入回归，需要网络
-node scripts/qa-static.mjs  # 生产子目录、离线缓存与移动端双指操作
+npm test                    # Real WASM / ONNX + controller contract tests
+npm run test:browser        # Chrome desktop, touch, actions, camera, and settings persistence
+node scripts/qa-import.mjs  # Real community repository import regression; requires network access
+node scripts/qa-static.mjs  # Production subdirectory, offline cache, and mobile two-finger gestures
 ```
 
-浏览器脚本默认使用 macOS 已安装的 Google Chrome，可用 `CHROME_PATH` 指定其他 Chrome / Chromium 可执行文件；`QA_URL` 指定测试站点。浏览器测试会生成 `qa-output/` 与 README 截图。测试细节及复现步骤见 [验证记录](docs/validation.md)。
+Browser scripts use Google Chrome installed on macOS by default. Set `CHROME_PATH` to another Chrome / Chromium executable and `QA_URL` to the site to test. Browser tests generate `qa-output/` and the README screenshots. See the [validation record](docs/validation.md) for test details and reproduction steps.
 
-原始 RL 策略存在失稳边界，连续动作、碰撞、偏斜起姿可能导致倒地。默认不会强制把鸭子“动画扶正”；倒地后在菜单重置。它是本地仿真器，未连接或控制实体机器人。
+The original RL policies have stability limits: repeated actions, collisions, and a tilted starting pose can cause falls. By default, the app does not force the duck upright with an animation; reset it in the menu after a fall. This is a local simulator; it does not connect to or control a physical robot.
 
-## 项目布局
+## Project layout
 
 ```text
-src/input/        浏览器与触屏输入
-src/simulation/   控制器、MuJoCo、Worker 和通信
-src/policies/     ONNX、导入校验和 IndexedDB
-src/render/       实际物理几何的 Three.js 渲染
-public/           原始模型、八个策略、资源哈希
-reference/        原控制器及接口文档快照
-scripts/          构建、缓存和浏览器验证
+src/input/        Browser and touch input
+src/simulation/   Controller, MuJoCo, Worker, and communication
+src/policies/     ONNX, import validation, and IndexedDB
+src/render/       Three.js rendering of the actual physics geometry
+public/           Original model, eight policies, and resource hashes
+reference/        Snapshots of the original controller and interface documentation
+scripts/          Build, caching, and browser validation
 ```
 
-这是与原 Microduck、Android 项目分开的 Git 仓库。Apache-2.0；第三方代码、机器人资源和模型的出处请见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。本项目是移植作品，不代表 Pollen Robotics 官方产品。
+This is a separate Git repository from the original Microduck and Android projects. Licensed under Apache-2.0; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the sources of third-party code, robot assets, and models. This project is an unofficial port and does not represent an official Pollen Robotics product.
